@@ -52,7 +52,7 @@ php artisan vendor:publish --tag=api-response-config
 
 ## Usage
 
-### 1. Dependency Injection (_recommended_)
+#### 1. Dependency Injection (recommended)
 
 ```php
 use Sevaske\LaravelApiResponse\Contracts\ApiResponseContract;
@@ -72,7 +72,7 @@ class UserController
 }
 ```
 
-### 2. Via `response()` macros
+#### 2. Via `response()` macros
 
 ```php
 return response()->success(
@@ -86,7 +86,7 @@ return response()->error(
 );
 ```
 
-### 3. Via helper
+#### 3. Via helper
 
 ```php
 return api()->success(

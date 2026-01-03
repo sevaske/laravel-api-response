@@ -1,2 +1,144 @@
-# laravel-api-response
-Laravel API Response is an opinionated package for building clean, consistent, and predictable JSON API responses in Laravel applications.
+# Laravel API Response
+
+**A simple library for a simple task**: building consistent JSON API responses in Laravel. Fully customizable when you need it
+
+
+#### What this package is
+
+- a small abstraction over JSON responses
+- a way to standardize API responses across your app
+- minimal by default, customizable by design
+- IDE-friendly
+
+#### Default response format
+
+Out of the box, the response looks like this:
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "id": 1
+  }
+}
+```
+
+Error response:
+
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": {
+    "email": "Invalid"
+  }
+}
+```
+
+All keys and values are fully configurable via config or by replacing the payload builder.
+
+## Installation
+
+```bash
+composer require sevaske/laravel-api-response
+```
+
+Optional config publishing:
+
+```bash
+php artisan vendor:publish --tag=api-response-config
+```
+
+
+## Usage
+
+### 1. Dependency Injection (_recommended_)
+
+```php
+use Sevaske\LaravelApiResponse\Contracts\ApiResponseContract;
+
+class UserController
+{
+    public function __construct(
+        private ApiResponseContract $api
+    ) {}
+
+    public function index()
+    {
+        return $this->api->success('OK', [
+            'id' => 1,
+        ]);
+    }
+}
+```
+
+### 2. Via `response()` macros
+
+```php
+return response()->success(
+    message: 'OK',
+    data: ['id' => 1],
+);
+
+return response()->error(
+    message: 'Validation failed',
+    errors: ['email' => 'Invalid']
+);
+```
+
+### 3. Via helper
+
+```php
+return api()->success(
+    message: 'OK',
+    data: ['id' => 1],
+);
+```
+
+## Customization
+
+Change response keys:
+
+```php
+return [
+    'success_key' => 'ok',
+    'message_key' => 'msg',
+    'data_key'    => 'results',
+    'errors_key'  => 'errors',
+];
+```
+
+Change the "success" value format:
+
+```php
+return [
+    'success_value' => 1,
+    'error_value'   => 0,
+];
+```
+
+
+## Extending
+
+Bind your own response implementation
+
+```php
+use Sevaske\LaravelApiResponse\Contracts\ApiResponseContract;
+
+$this->app->bind(ApiResponseContract::class, MyCustomApiResponse::class);
+```
+
+Replace the payload builder
+
+```php
+use Sevaske\ApiResponsePayload\Contracts\ApiResponsePayloadContract;
+
+$this->app->bind(ApiResponsePayloadContract::class, MyPayloadBuilder::class);
+```
+
+This allows full control over the final response structure without touching controllers.
+
+
+## License
+
+[MIT](LICENSE)

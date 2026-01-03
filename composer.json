@@ -1,0 +1,75 @@
+{
+    "name": "sevaske/laravel-api-response",
+    "description": "The package for building clean, consistent, and predictable JSON API responses in laravel applications.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "laravel",
+        "api",
+        "response",
+        "json",
+        "api response",
+        "laravel api",
+        "http response"
+    ],
+    "authors": [
+        {
+            "name": "sevaske"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Sevaske\\LaravelApiResponse\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Sevaske\\LaravelApiResponse\\Tests\\": "tests/"
+        },
+        "files": [
+            "ide-helper/response-factory.php"
+        ]
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "analyse": "vendor/bin/phpstan analyse",
+        "lint": "vendor/bin/pint",
+        "check": [
+            "@lint",
+            "@analyse",
+            "@test"
+        ],
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ]
+    },
+    "require": {
+        "php": "^8.0",
+        "illuminate/contracts": "^10.0||^11.0||^12.0",
+        "illuminate/support": "^10.0||^11.0||^12.0",
+        "sevaske/api-response-payload": "^1.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^9.0||^10.0",
+        "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0|^11.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "ApiResponseServiceProvider"
+            ]
+        }
+    },
+    "prefer-stable": true
+}

@@ -65,8 +65,8 @@ final class ApiResponseServiceProvider extends ServiceProvider
     protected function registerMacros(): void
     {
         Response::macro('success', function (
-            mixed $data = null,
             ?string $message = null,
+            mixed $data = null,
             int $status = 200
         ) {
             /** @var ApiResponseContract $api */
@@ -76,8 +76,8 @@ final class ApiResponseServiceProvider extends ServiceProvider
         });
 
         Response::macro('error', function (
-            mixed $errors = null,
             ?string $message = null,
+            mixed $errors = null,
             int $status = 400
         ) {
             /** @var ApiResponseContract $api */

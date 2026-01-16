@@ -70,8 +70,11 @@
     "extra": {
         "laravel": {
             "providers": [
-                "ApiResponseServiceProvider"
-            ]
+                "Sevaske\\LaravelApiResponse\\ApiResponseServiceProvider"
+            ],
+            "aliases": {
+                "ApiResponse": "Sevaske\\LaravelApiResponse\\Facades\\ApiResponse"
+            }
         }
     },
     "prefer-stable": true

@@ -12,14 +12,49 @@ use Sevaske\ApiResponsePayload\ApiResponsePayload;
 use Sevaske\ApiResponsePayload\Contracts\ApiResponsePayloadContract;
 use Sevaske\LaravelApiResponse\ApiResponse;
 use Sevaske\LaravelApiResponse\Contracts\ApiResponseContract;
+use Sevaske\LaravelApiResponse\Contracts\PaginationResolverContract;
+use Sevaske\LaravelApiResponse\Pagination\PaginationResolver;
 
 final class ApiResponseServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        /**
-         * Payload builder
-         */
+        $this->registerPaginationResolver();
+        $this->registerPayloadBuilder();
+        $this->registerApiResponse();
+    }
+
+    public function boot(): void
+    {
+        $this->publishes([
+            __DIR__.'/../../config/api-response.php' => config_path('api-response.php'),
+        ], 'api-response-config');
+
+        $this->registerMacros();
+    }
+
+    /**
+     * Register pagination resolver.
+     */
+    private function registerPaginationResolver(): void
+    {
+        $this->app->singleton(PaginationResolverContract::class, function (Application $app) {
+            /** @var Repository $config */
+            $config = $app['config'];
+            $resolverClass = $config->string(
+                'api-response.pagination.resolver',
+                PaginationResolver::class
+            );
+
+            return $app->make($resolverClass);
+        });
+    }
+
+    /**
+     * Register payload builder.
+     */
+    private function registerPayloadBuilder(): void
+    {
         $this->app->singleton(ApiResponsePayloadContract::class, function (Application $app) {
             /** @var Repository $config */
             $config = $app['config'];
@@ -37,42 +72,37 @@ final class ApiResponseServiceProvider extends ServiceProvider
                 ),
             );
         });
+    }
 
-        /**
-         * Response adapter
-         */
+    /**
+     * Register API response adapter.
+     */
+    private function registerApiResponse(): void
+    {
         $this->app->singleton(ApiResponseContract::class, function (Application $app) {
             /** @var Repository $config */
             $config = $app['config'];
 
             return new ApiResponse(
                 payload: $app->make(ApiResponsePayloadContract::class),
+                paginationResolver: $app->make(PaginationResolverContract::class),
                 dataKey: $config->string('api-response.data_key', 'data'),
                 errorsKey: $config->string('api-response.errors_key', 'errors'),
             );
         });
     }
 
-    public function boot(): void
-    {
-        $this->publishes([
-            __DIR__.'/../../config/api-response.php' => config_path('api-response.php'),
-        ], 'api-response-config');
-
-        $this->registerMacros();
-    }
-
-    protected function registerMacros(): void
+    /**
+     * Register response macros.
+     */
+    private function registerMacros(): void
     {
         Response::macro('success', function (
             ?string $message = null,
             mixed $data = null,
             int $status = 200
         ) {
-            /** @var ApiResponseContract $api */
-            $api = app(ApiResponseContract::class);
-
-            return $api->success($message, $data, $status);
+            return app(ApiResponseContract::class)->success($message, $data, $status);
         });
 
         Response::macro('error', function (
@@ -80,10 +110,7 @@ final class ApiResponseServiceProvider extends ServiceProvider
             mixed $errors = null,
             int $status = 400
         ) {
-            /** @var ApiResponseContract $api */
-            $api = app(ApiResponseContract::class);
-
-            return $api->error($message, $errors, $status);
+            return app(ApiResponseContract::class)->error($message, $errors, $status);
         });
     }
 

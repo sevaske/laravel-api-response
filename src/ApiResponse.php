@@ -6,23 +6,23 @@ namespace Sevaske\LaravelApiResponse;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Pagination\AbstractCursorPaginator;
 use Illuminate\Pagination\AbstractPaginator;
-use Illuminate\Pagination\Cursor;
-use Illuminate\Pagination\CursorPaginator;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
 use Sevaske\ApiResponsePayload\Contracts\ApiResponsePayloadContract;
 use Sevaske\LaravelApiResponse\Contracts\ApiResponseContract;
+use Sevaske\LaravelApiResponse\Contracts\PaginationResolverContract;
 
 final class ApiResponse implements ApiResponseContract
 {
     /**
      * @param  ApiResponsePayloadContract  $payload  Payload builder (core)
+     * @param  PaginationResolverContract<int, mixed>  $paginationResolver  Pagination resolver
      * @param  string  $dataKey  Key for successful response data
      * @param  string  $errorsKey  Key for error details
      */
     public function __construct(
         private ApiResponsePayloadContract $payload,
+        private PaginationResolverContract $paginationResolver,
         private string $dataKey = 'data',
         private string $errorsKey = 'errors',
     ) {}
@@ -35,22 +35,24 @@ final class ApiResponse implements ApiResponseContract
         mixed $data = null,
         int $status = 200
     ): JsonResponse {
-        $pagination = $this->extractPagination($data);
 
-        $resolvedData = $data instanceof JsonResource
-            ? $data->resolve()
-            : $data;
+        $pagination = [];
+
+        if ($data instanceof JsonResource) {
+            $paginator = $data->resource;
+
+            if ($paginator instanceof AbstractPaginator || $paginator instanceof AbstractCursorPaginator) {
+                $pagination = $this->paginationResolver->resolve($paginator);
+            }
+
+            $data = $data->resolve();
+        }
 
         /** @var array<string, mixed> $response */
         $response = $this->payload->build(true, $message, [
-            $this->dataKey => $resolvedData,
+            $this->dataKey => $data,
+            ...$pagination,
         ]);
-
-        if ($pagination !== null) {
-            $response['meta'] = [
-                'pagination' => $pagination,
-            ];
-        }
 
         return response()->json($response, $status);
     }
@@ -104,63 +106,5 @@ final class ApiResponse implements ApiResponseContract
         ?array $errors = null
     ): JsonResponse {
         return $this->error($message, $errors, 422);
-    }
-
-    /**
-     * @return array{
-     *   per_page: int,
-     *   current_page?: int,
-     *   total?: int,
-     *   last_page?: int,
-     *   has_more?: bool,
-     *   next_cursor?: string|null,
-     *   prev_cursor?: string|null
-     * }|null
-     */
-    private function extractPagination(mixed $data): ?array
-    {
-        if (! $data instanceof JsonResource) {
-            return null;
-        }
-
-        $paginator = $data->resource;
-
-        /**
-         * Cursor pagination
-         */
-        if ($paginator instanceof CursorPaginator) {
-            $next = $paginator->nextCursor();
-            $prev = $paginator->previousCursor();
-
-            return [
-                'per_page' => $paginator->perPage(),
-                'has_more' => $paginator->hasMorePages(),
-                'next_cursor' => $next instanceof Cursor ? $next->encode() : null,
-                'prev_cursor' => $prev instanceof Cursor ? $prev->encode() : null,
-            ];
-        }
-
-        /**
-         * Offset pagination
-         */
-        if (! $paginator instanceof AbstractPaginator) {
-            return null;
-        }
-
-        $pagination = [
-            'per_page' => $paginator->perPage(),
-            'current_page' => $paginator->currentPage(),
-        ];
-
-        if ($paginator instanceof LengthAwarePaginator) {
-            $pagination['total'] = $paginator->total();
-            $pagination['last_page'] = $paginator->lastPage();
-        }
-
-        if ($paginator instanceof Paginator) {
-            $pagination['has_more'] = $paginator->hasMorePages();
-        }
-
-        return $pagination;
     }
 }

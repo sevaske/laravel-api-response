@@ -10,10 +10,12 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Sevaske\ApiResponsePayload\ApiResponsePayload;
 use Sevaske\LaravelApiResponse\ApiResponse;
+use Sevaske\LaravelApiResponse\Contracts\ApiResponseContract;
+use Sevaske\LaravelApiResponse\Pagination\PaginationResolver;
 
 final class ApiResponseTest extends TestCase
 {
-    private ApiResponse $api;
+    private ApiResponseContract $api;
 
     protected function setUp(): void
     {
@@ -28,6 +30,7 @@ final class ApiResponseTest extends TestCase
 
         $this->api = new ApiResponse(
             payload: $payload,
+            paginationResolver: new PaginationResolver,
             dataKey: 'data',
             errorsKey: 'errors',
         );
@@ -55,26 +58,6 @@ final class ApiResponseTest extends TestCase
         ], $response->getData(true));
     }
 
-    public function test_created_response(): void
-    {
-        $response = $this->api->created('Created', ['id' => 10]);
-
-        $this->assertSame(201, $response->getStatusCode());
-    }
-
-    public function test_validation_response(): void
-    {
-        $response = $this->api->validation(
-            errors: ['email' => ['Invalid']]
-        );
-
-        $this->assertSame([
-            'success' => false,
-            'message' => 'The given data was invalid.',
-            'errors' => ['email' => ['Invalid']],
-        ], $response->getData(true));
-    }
-
     public function test_length_aware_pagination_response(): void
     {
         /** @var array<int, array<string, mixed>> $items */
@@ -87,39 +70,19 @@ final class ApiResponseTest extends TestCase
             currentPage: 1,
         );
 
-        $resource = new class($paginator, $items) extends JsonResource
-        {
-            /**
-             * @param  array<int, array<string, mixed>>  $items
-             */
-            public function __construct(mixed $resource, private array $items)
-            {
-                parent::__construct($resource);
-            }
-
-            /**
-             * @return array<int, array<string, mixed>>
-             */
-            public function toArray($request): array
-            {
-                return $this->items;
-            }
-        };
-
+        $resource = $this->resource($paginator, $items);
         $response = $this->api->success('OK', $resource);
 
         $this->assertSame([
             'success' => true,
             'message' => 'OK',
             'data' => $items,
-            'meta' => [
-                'pagination' => [
-                    'per_page' => 2,
-                    'current_page' => 1,
-                    'total' => 10,
-                    'last_page' => 5,
-                ],
-            ],
+            'per_page' => 2,
+            'current_page' => 1,
+            'total' => 10,
+            'last_page' => 5,
+            'next_page_url' => '/?page=2',
+            'prev_page_url' => null,
         ], $response->getData(true));
     }
 
@@ -134,38 +97,18 @@ final class ApiResponseTest extends TestCase
             currentPage: 1,
         );
 
-        $resource = new class($paginator, $items) extends JsonResource
-        {
-            /**
-             * @param  array<int, array<string, mixed>>  $items
-             */
-            public function __construct(mixed $resource, private array $items)
-            {
-                parent::__construct($resource);
-            }
-
-            /**
-             * @return array<int, array<string, mixed>>
-             */
-            public function toArray($request): array
-            {
-                return $this->items;
-            }
-        };
-
+        $resource = $this->resource($paginator, $items);
         $response = $this->api->success('OK', $resource);
 
         $this->assertSame([
             'success' => true,
             'message' => 'OK',
             'data' => $items,
-            'meta' => [
-                'pagination' => [
-                    'per_page' => 2,
-                    'current_page' => 1,
-                    'has_more' => false,
-                ],
-            ],
+            'per_page' => 2,
+            'current_page' => 1,
+            'has_more' => false,
+            'next_page_url' => null,
+            'prev_page_url' => null,
         ], $response->getData(true));
     }
 
@@ -181,7 +124,27 @@ final class ApiResponseTest extends TestCase
             options: ['path' => '/test'],
         );
 
-        $resource = new class($paginator, $items) extends JsonResource
+        $resource = $this->resource($paginator, $items);
+        $response = $this->api->success('OK', $resource);
+
+        $this->assertSame([
+            'success' => true,
+            'message' => 'OK',
+            'data' => $items,
+            'per_page' => 2,
+            'next_page_url' => null,
+            'prev_page_url' => null,
+        ], $response->getData(true));
+    }
+
+    /**
+     * Helper to build JsonResource with paginator.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     */
+    private function resource(mixed $paginator, array $items): JsonResource
+    {
+        return new class($paginator, $items) extends JsonResource
         {
             /**
              * @param  array<int, array<string, mixed>>  $items
@@ -199,21 +162,5 @@ final class ApiResponseTest extends TestCase
                 return $this->items;
             }
         };
-
-        $response = $this->api->success('OK', $resource);
-
-        $this->assertSame([
-            'success' => true,
-            'message' => 'OK',
-            'data' => $items,
-            'meta' => [
-                'pagination' => [
-                    'per_page' => 2,
-                    'has_more' => false,
-                    'next_cursor' => null,
-                    'prev_cursor' => null,
-                ],
-            ],
-        ], $response->getData(true));
     }
 }

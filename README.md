@@ -103,6 +103,7 @@ Supported paginators:
 
 * `LengthAwarePaginator` (`paginate()`)
 * `Paginator` (`simplePaginate()`)
+* `CursorPaginator` (`cursorPaginate()`)
 
 ```php
 use App\Http\Resources\UserResource;
@@ -115,7 +116,89 @@ return api()->success(
 );
 ```
 
-Pagination metadata will be added to the `meta.pagination` section of the response.
+### Pagination response format
+
+Pagination fields are added **at the top level of the response**, alongside the `data` key,
+following Laravel's native pagination style (no `meta` wrapper).
+
+**Length-aware pagination (`paginate()`):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {"id": 1},
+    {"id": 2}
+  ],
+  "per_page": 15,
+  "current_page": 1,
+  "total": 100,
+  "last_page": 7,
+  "next_page_url": "/?page=2",
+  "prev_page_url": null
+}
+```
+
+**Simple pagination (`simplePaginate()`):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {"id": 1},
+    {"id": 2}
+  ],
+  "per_page": 15,
+  "current_page": 1,
+  "has_more": true,
+  "next_page_url": "/?page=2",
+  "prev_page_url": null
+}
+```
+
+**Cursor pagination (`cursorPaginate()`):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {"id": 1},
+    {"id": 2}
+  ],
+  "per_page": 15,
+  "has_more": true,
+  "next_cursor": "eyJpZCI6Mn0",
+  "prev_cursor": null
+}
+```
+
+### Custom pagination resolver
+
+Pagination extraction is handled by a dedicated resolver. You can replace it with your own
+implementation if you need a different pagination structure.
+
+```php
+// config/api-response.php
+
+return [
+    'pagination' => [
+        // Resolver responsible for extracting pagination data
+        // from Laravel paginator instances
+        'resolver' => Sevaske\LaravelApiResponse\Pagination\PaginationResolver::class,
+    ],
+];
+```
+
+Bind your own resolver:
+
+```php
+use Sevaske\LaravelApiResponse\Contracts\PaginationResolverContract;
+
+$this->app->bind(
+    PaginationResolverContract::class,
+    MyCustomPaginationResolver::class
+);
+```
 
 ## Customization
 

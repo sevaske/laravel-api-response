@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Sevaske\LaravelApiResponse;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Pagination\AbstractPaginator;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Sevaske\ApiResponsePayload\Contracts\ApiResponsePayloadContract;
 use Sevaske\LaravelApiResponse\Contracts\ApiResponseContract;
 
@@ -29,10 +33,13 @@ final class ApiResponse implements ApiResponseContract
         mixed $data = null,
         int $status = 200
     ): JsonResponse {
+        $pagination = $this->extractPagination($data);
+
         return response()->json(
-            $this->payload->build(true, $message, [
+            $this->payload->build(true, $message, array_filter([
                 $this->dataKey => $data,
-            ]),
+                'meta' => $pagination ? ['pagination' => $pagination] : null,
+            ])),
             $status
         );
     }
@@ -98,5 +105,43 @@ final class ApiResponse implements ApiResponseContract
         mixed $errors = null,
     ): JsonResponse {
         return $this->error($message, $errors, 422);
+    }
+
+    /**
+     * @return array{
+     *   current_page: int,
+     *   per_page: int,
+     *   total?: int,
+     *   last_page?: int,
+     *   has_more?: bool
+     * }|null
+     */
+    private function extractPagination(mixed $data): ?array
+    {
+        if (! $data instanceof JsonResource) {
+            return null;
+        }
+
+        $paginator = $data->resource;
+
+        if (! $paginator instanceof AbstractPaginator) {
+            return null;
+        }
+
+        $pagination = [
+            'current_page' => $paginator->currentPage(),
+            'per_page' => $paginator->perPage(),
+        ];
+
+        if ($paginator instanceof LengthAwarePaginator) {
+            $pagination['total'] = $paginator->total();
+            $pagination['last_page'] = $paginator->lastPage();
+        }
+
+        if ($paginator instanceof Paginator) {
+            $pagination['has_more'] = $paginator->hasMorePages();
+        }
+
+        return $pagination;
     }
 }

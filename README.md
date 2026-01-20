@@ -2,17 +2,17 @@
 
 **A simple library for a simple task**: building consistent JSON API responses in Laravel. Fully customizable when you need it
 
-
 #### What this package is
 
-- a small abstraction over JSON responses
-- a way to standardize API responses across your app
-- minimal by default, customizable by design
-- IDE-friendly
+* a small abstraction over JSON responses
+* a way to standardize API responses across your app
+* minimal by default, customizable by design
+* IDE-friendly
 
 #### Default response format
 
 Out of the box, the response looks like this:
+
 ```json
 {
   "success": true,
@@ -48,7 +48,6 @@ Optional config publishing:
 ```bash
 php artisan vendor:publish --tag=api-response-config
 ```
-
 
 ## Usage
 
@@ -95,6 +94,29 @@ return api()->success(
 );
 ```
 
+## Pagination
+
+Pagination is detected automatically when a Laravel `JsonResource` wrapping a paginator
+is passed as `data`.
+
+Supported paginators:
+
+* `LengthAwarePaginator` (`paginate()`)
+* `Paginator` (`simplePaginate()`)
+
+```php
+use App\Http\Resources\UserResource;
+use App\Models\User;
+
+$users = User::paginate();
+
+return api()->success(
+    data: UserResource::collection($users)
+);
+```
+
+Pagination metadata will be added to the `meta.pagination` section of the response.
+
 ## Customization
 
 Change response keys:
@@ -117,7 +139,6 @@ return [
 ];
 ```
 
-
 ## Extending
 
 Bind your own response implementation
@@ -137,7 +158,6 @@ $this->app->bind(ApiResponsePayloadContract::class, MyPayloadBuilder::class);
 ```
 
 This allows full control over the final response structure without touching controllers.
-
 
 ## License
 

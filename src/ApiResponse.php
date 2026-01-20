@@ -7,6 +7,8 @@ namespace Sevaske\LaravelApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Pagination\AbstractPaginator;
+use Illuminate\Pagination\Cursor;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Sevaske\ApiResponsePayload\Contracts\ApiResponsePayloadContract;
@@ -35,13 +37,22 @@ final class ApiResponse implements ApiResponseContract
     ): JsonResponse {
         $pagination = $this->extractPagination($data);
 
-        return response()->json(
-            $this->payload->build(true, $message, array_filter([
-                $this->dataKey => $data,
-                'meta' => $pagination ? ['pagination' => $pagination] : null,
-            ])),
-            $status
-        );
+        $resolvedData = $data instanceof JsonResource
+            ? $data->resolve()
+            : $data;
+
+        /** @var array<string, mixed> $response */
+        $response = $this->payload->build(true, $message, [
+            $this->dataKey => $resolvedData,
+        ]);
+
+        if ($pagination !== null) {
+            $response['meta'] = [
+                'pagination' => $pagination,
+            ];
+        }
+
+        return response()->json($response, $status);
     }
 
     /**
@@ -52,68 +63,58 @@ final class ApiResponse implements ApiResponseContract
         mixed $errors = null,
         int $status = 400
     ): JsonResponse {
-        return response()->json(
-            $this->payload->build(false, $message, [
-                $this->errorsKey => $errors,
-            ]),
-            $status
-        );
+        /** @var array<string, mixed> $response */
+        $response = $this->payload->build(false, $message, [
+            $this->errorsKey => $errors,
+        ]);
+
+        return response()->json($response, $status);
     }
 
-    /**
-     * 201 Created.
-     */
     public function created(
         ?string $message = 'Created',
-        mixed $data = null,
+        mixed $data = null
     ): JsonResponse {
         return $this->success($message, $data, 201);
     }
 
-    /**
-     * 401 Unauthorized.
-     */
     public function unauthorized(
-        ?string $message = 'Unauthorized',
+        ?string $message = 'Unauthorized'
     ): JsonResponse {
         return $this->error($message, null, 401);
     }
 
-    /**
-     * 403 Forbidden.
-     */
     public function forbidden(
-        ?string $message = 'Forbidden',
+        ?string $message = 'Forbidden'
     ): JsonResponse {
         return $this->error($message, null, 403);
     }
 
-    /**
-     * 404 Not Found.
-     */
     public function notFound(
-        ?string $message = 'Not Found',
+        ?string $message = 'Not Found'
     ): JsonResponse {
         return $this->error($message, null, 404);
     }
 
     /**
-     * 422 Validation error.
+     * @param  array<string, mixed>|null  $errors
      */
     public function validation(
         ?string $message = 'The given data was invalid.',
-        mixed $errors = null,
+        ?array $errors = null
     ): JsonResponse {
         return $this->error($message, $errors, 422);
     }
 
     /**
      * @return array{
-     *   current_page: int,
      *   per_page: int,
+     *   current_page?: int,
      *   total?: int,
      *   last_page?: int,
-     *   has_more?: bool
+     *   has_more?: bool,
+     *   next_cursor?: string|null,
+     *   prev_cursor?: string|null
      * }|null
      */
     private function extractPagination(mixed $data): ?array
@@ -124,13 +125,31 @@ final class ApiResponse implements ApiResponseContract
 
         $paginator = $data->resource;
 
+        /**
+         * Cursor pagination
+         */
+        if ($paginator instanceof CursorPaginator) {
+            $next = $paginator->nextCursor();
+            $prev = $paginator->previousCursor();
+
+            return [
+                'per_page' => $paginator->perPage(),
+                'has_more' => $paginator->hasMorePages(),
+                'next_cursor' => $next instanceof Cursor ? $next->encode() : null,
+                'prev_cursor' => $prev instanceof Cursor ? $prev->encode() : null,
+            ];
+        }
+
+        /**
+         * Offset pagination
+         */
         if (! $paginator instanceof AbstractPaginator) {
             return null;
         }
 
         $pagination = [
-            'current_page' => $paginator->currentPage(),
             'per_page' => $paginator->perPage(),
+            'current_page' => $paginator->currentPage(),
         ];
 
         if ($paginator instanceof LengthAwarePaginator) {

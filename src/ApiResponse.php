@@ -30,25 +30,26 @@ final readonly class ApiResponse implements ApiResponseContract
         mixed $data = null,
         int $status = 200
     ): JsonResponse {
+        /** @var array<string, mixed> $extra */
+        $extra = [];
+
         if ($data instanceof JsonResource) {
-            $rawPayload = $data->response()->getData(true);
+            $raw = $data->response()->getData(true);
 
             /** @var array<string, mixed> $payload */
-            $payload = is_array($rawPayload) ? $rawPayload : [];
+            $payload = is_array($raw) ? $raw : [];
 
-            $resourceData = $payload['data'] ?? null;
+            // remap "data" → custom data key
+            $extra[$this->dataKey] = $payload['data'] ?? null;
+
+            // keep Laravel-native meta / links (pagination etc.)
             unset($payload['data']);
 
-            /** @var array<string, mixed> $extra */
-            $extra = [
-                $this->dataKey => $resourceData,
-                ...$payload,
-            ];
+            if ($payload !== []) {
+                $extra += $payload;
+            }
         } else {
-            /** @var array<string, mixed> $extra */
-            $extra = [
-                $this->dataKey => $data,
-            ];
+            $extra[$this->dataKey] = $data;
         }
 
         /** @var array<string, mixed> $response */

@@ -17,11 +17,4 @@ return [
     'data_key' => 'data',
     // Key used for error details.
     'errors_key' => 'errors',
-
-    'pagination' => [
-        // Pagination resolver class.
-        // Allows customizing how pagination metadata is extracted
-        // from Laravel paginator instances.
-        'resolver' => Sevaske\LaravelApiResponse\Pagination\PaginationResolver::class,
-    ],
 ];

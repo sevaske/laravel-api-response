@@ -12,14 +12,11 @@ use Sevaske\ApiResponsePayload\ApiResponsePayload;
 use Sevaske\ApiResponsePayload\Contracts\ApiResponsePayloadContract;
 use Sevaske\LaravelApiResponse\ApiResponse;
 use Sevaske\LaravelApiResponse\Contracts\ApiResponseContract;
-use Sevaske\LaravelApiResponse\Contracts\PaginationResolverContract;
-use Sevaske\LaravelApiResponse\Pagination\PaginationResolver;
 
 final class ApiResponseServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->registerPaginationResolver();
         $this->registerPayloadBuilder();
         $this->registerApiResponse();
     }
@@ -31,23 +28,6 @@ final class ApiResponseServiceProvider extends ServiceProvider
         ], 'api-response-config');
 
         $this->registerMacros();
-    }
-
-    /**
-     * Register pagination resolver.
-     */
-    private function registerPaginationResolver(): void
-    {
-        $this->app->singleton(PaginationResolverContract::class, function (Application $app) {
-            /** @var Repository $config */
-            $config = $app['config'];
-            $resolverClass = $config->string(
-                'api-response.pagination.resolver',
-                PaginationResolver::class
-            );
-
-            return $app->make($resolverClass);
-        });
     }
 
     /**
@@ -85,7 +65,6 @@ final class ApiResponseServiceProvider extends ServiceProvider
 
             return new ApiResponse(
                 payload: $app->make(ApiResponsePayloadContract::class),
-                paginationResolver: $app->make(PaginationResolverContract::class),
                 dataKey: $config->string('api-response.data_key', 'data'),
                 errorsKey: $config->string('api-response.errors_key', 'errors'),
             );

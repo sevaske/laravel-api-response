@@ -11,7 +11,6 @@ use Illuminate\Pagination\Paginator;
 use Sevaske\ApiResponsePayload\ApiResponsePayload;
 use Sevaske\LaravelApiResponse\ApiResponse;
 use Sevaske\LaravelApiResponse\Contracts\ApiResponseContract;
-use Sevaske\LaravelApiResponse\Pagination\PaginationResolver;
 
 final class ApiResponseTest extends TestCase
 {
@@ -30,7 +29,6 @@ final class ApiResponseTest extends TestCase
 
         $this->api = new ApiResponse(
             payload: $payload,
-            paginationResolver: new PaginationResolver,
             dataKey: 'data',
             errorsKey: 'errors',
         );

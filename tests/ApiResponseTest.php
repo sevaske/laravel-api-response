@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Sevaske\LaravelApiResponse\Tests;
+namespace Tests;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Pagination\CursorPaginator;

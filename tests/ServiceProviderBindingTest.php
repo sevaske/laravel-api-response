@@ -1,12 +1,11 @@
 <?php
 
-namespace Sevaske\LaravelApiResponse\Tests\Unit;
+namespace Tests;
 
 use Illuminate\Foundation\Application;
 use Sevaske\ApiResponsePayload\ApiResponsePayload;
 use Sevaske\LaravelApiResponse\ApiResponse;
 use Sevaske\LaravelApiResponse\Contracts\ApiResponseContract;
-use Sevaske\LaravelApiResponse\Tests\TestCase;
 
 class ServiceProviderBindingTest extends TestCase
 {

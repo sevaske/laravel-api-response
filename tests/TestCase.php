@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Sevaske\LaravelApiResponse\Tests;
+namespace Tests;
 
 use Illuminate\Contracts\Config\Repository;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;

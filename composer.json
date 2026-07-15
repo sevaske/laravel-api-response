@@ -65,7 +65,7 @@
         "laravel/pint": "^1.0",
         "phpunit/phpunit": "^10.0|^11.0|^12.0",
         "orchestra/testbench": "^9.0|^10.0|^11.0",
-        "nunomaduro/larastan": "^3.10"
+        "larastan/larastan": "^3.10"
     },
     "extra": {
         "laravel": {

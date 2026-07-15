@@ -158,20 +158,25 @@ return [
 
 ## Extending
 
-Bind your own response implementation
+Bind your own response implementation and payload builder
 
 ```php
+// App\Providers\AppServiceProvider.php
+
 use Sevaske\LaravelApiResponse\Contracts\ApiResponseContract;
 
-$this->app->bind(ApiResponseContract::class, MyCustomApiResponse::class);
-```
-
-Replace the payload builder
-
-```php
-use Sevaske\ApiResponsePayload\Contracts\ApiResponsePayloadContract;
-
-$this->app->bind(ApiResponsePayloadContract::class, MyPayloadBuilder::class);
+public function register(): void
+{
+    $this->app->bind(
+        ApiResponseContract::class,
+        MyCustomApiResponse::class
+    );
+    
+    $this->app->bind(
+        ApiResponsePayloadContract::class, 
+        MyPayloadBuilder::class
+    );
+}
 ```
 
 This allows full control over the final response structure without touching controllers.

@@ -40,8 +40,8 @@ final class ApiResponseServiceProvider extends ServiceProvider
             $config = $app['config'];
 
             return new ApiResponsePayload(
-                messageKey: (string) $config->get('api-response.message_key', 'message'),
-                successKey: (string) $config->get('api-response.success_key', 'success'),
+                messageKey: $config->string('api-response.message_key', 'message'),
+                successKey: $config->string('api-response.success_key', 'success'),
                 successValue: $this->resolveScalar(
                     $config->get('api-response.success_value', true),
                     true
@@ -65,8 +65,8 @@ final class ApiResponseServiceProvider extends ServiceProvider
 
             return new ApiResponse(
                 payload: $app->make(ApiResponsePayloadContract::class),
-                dataKey: (string) $config->get('api-response.data_key', 'data'),
-                errorsKey: (string) $config->get('api-response.errors_key', 'errors'),
+                dataKey: $config->string('api-response.data_key', 'data'),
+                errorsKey: $config->string('api-response.errors_key', 'errors'),
             );
         });
     }

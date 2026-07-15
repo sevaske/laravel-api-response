@@ -1,5 +1,8 @@
 # Laravel API Response
 
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/sevaske/laravel-api-response.svg?style=flat-square)](https://packagist.org/packages/sevaske/laravel-api-response)
+[![Tests](https://github.com/sevaske/laravel-api-response/actions/workflows/CI.yaml/badge.svg)](https://github.com/sevaske/laravel-api-response/actions/workflows/CI.yaml)
+
 **A simple library for a simple task**: building consistent JSON API responses in Laravel. Fully customizable when you need it
 
 ## Features

@@ -27,7 +27,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Sevaske\\LaravelApiResponse\\Tests\\": "tests/"
+            "Tests\\": "tests/"
         },
         "files": [
             "ide-helper/response-factory.php"
@@ -56,9 +56,9 @@
         ]
     },
     "require": {
-        "php": "^8.2",
-        "illuminate/contracts": "^10.0|^11.0|^12.0",
-        "illuminate/support": "^10.0|^11.0|^12.0",
+        "php": "^8.3",
+        "illuminate/contracts": "^10.0|^11.0|^12.0|^13.0",
+        "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
         "sevaske/api-response-payload": "^1.0"
     },
     "require-dev": {

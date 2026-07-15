@@ -2,12 +2,15 @@
 
 **A simple library for a simple task**: building consistent JSON API responses in Laravel. Fully customizable when you need it
 
-#### What this package is
+## Features
 
-* a small abstraction over JSON responses
-* a way to standardize API responses across your app
-* minimal by default, customizable by design
-* IDE-friendly
+- Unified success/error JSON responses
+- Response macros
+- Global helper
+- Configurable response structure
+- Custom payload builders
+- Laravel paginator support
+- Dependency injection friendly
 
 #### Default response format
 
@@ -35,7 +38,12 @@ Error response:
 }
 ```
 
-All keys and values are fully configurable via config or by replacing the payload builder.
+Response structure is fully configurable through the config file or by replacing the payload builder.
+
+## Requirements
+
+- PHP ^8.3
+- Laravel ^10.0|^11.0|^12.0|^13.0
 
 ## Installation
 
@@ -43,7 +51,9 @@ All keys and values are fully configurable via config or by replacing the payloa
 composer require sevaske/laravel-api-response
 ```
 
-Optional config publishing:
+## Configuration
+
+Publish the config:
 
 ```bash
 php artisan vendor:publish --tag=api-response-config
@@ -62,11 +72,11 @@ class UserController
         private ApiResponseContract $api
     ) {}
 
-    public function index()
+    public function show(User $user)
     {
-        return $this->api->success('OK', [
-            'id' => 1,
-        ]);
+        return $this->api->success(
+            data: $user
+        );
     }
 }
 ```

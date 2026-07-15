@@ -45,8 +45,8 @@ Response structure is fully configurable through the config file or by replacing
 
 ## Requirements
 
-- PHP ^8.3
-- Laravel ^10.0|^11.0|^12.0|^13.0
+- PHP ^8.2
+- Laravel ^11.0|^12.0
 
 ## Installation
 

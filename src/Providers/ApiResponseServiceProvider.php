@@ -35,13 +35,13 @@ final class ApiResponseServiceProvider extends ServiceProvider
      */
     private function registerPayloadBuilder(): void
     {
-        $this->app->singleton(ApiResponsePayloadContract::class, function (Application $app) {
+        $this->app->singletonIf(ApiResponsePayloadContract::class, function (Application $app) {
             /** @var Repository $config */
             $config = $app['config'];
 
             return new ApiResponsePayload(
-                messageKey: $config->string('api-response.message_key', 'message'),
-                successKey: $config->string('api-response.success_key', 'success'),
+                messageKey: (string) $config->get('api-response.message_key', 'message'),
+                successKey: (string) $config->get('api-response.success_key', 'success'),
                 successValue: $this->resolveScalar(
                     $config->get('api-response.success_value', true),
                     true
@@ -59,14 +59,14 @@ final class ApiResponseServiceProvider extends ServiceProvider
      */
     private function registerApiResponse(): void
     {
-        $this->app->singleton(ApiResponseContract::class, function (Application $app) {
+        $this->app->singletonIf(ApiResponseContract::class, function (Application $app) {
             /** @var Repository $config */
             $config = $app['config'];
 
             return new ApiResponse(
                 payload: $app->make(ApiResponsePayloadContract::class),
-                dataKey: $config->string('api-response.data_key', 'data'),
-                errorsKey: $config->string('api-response.errors_key', 'errors'),
+                dataKey: (string) $config->get('api-response.data_key', 'data'),
+                errorsKey: (string) $config->get('api-response.errors_key', 'errors'),
             );
         });
     }
